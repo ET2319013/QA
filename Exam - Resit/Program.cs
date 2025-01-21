@@ -1,61 +1,84 @@
 ﻿using System;
-using System.Net;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
-using static System.Net.Mime.MediaTypeNames;
-using System.Xml.Linq;
 using NUnit.Framework.Legacy;
 
-namespace SeleniumDocs.GettingStarted;
-
-public static class DynamicControlsTest
+namespace SeleniumDocs.GettingStarted
 {
-    public static void Main()
+    public static class DynamicControlsTest
     {
-        IWebDriver SeleniumDriver = new ChromeDriver();
-        bool AssertSiteReach = false;
-        bool AssertButtonClick = false;
-        int ScreenshotCount = 0;
-        try // checks if the site can be reached, if not - stops the work
+        public static void Main()
         {
-            SeleniumDriver.Navigate().GoToUrl("https://the-internet.herokuapp.com/challenging_dom");
-            
-        }
-        catch (OpenQA.Selenium.WebDriverException ex)
-        {
-            Console.WriteLine("The Site Couldn't Be Reached");
-            ScreenshotCount = 11;
-        }
-        AssertSiteReach = true; // assert
-        ClassicAssert.IsTrue(AssertSiteReach);
-        var title = SeleniumDriver.Title;
-        
-        while (ScreenshotCount < 10)
-        {
-            SeleniumDriver.Manage().Timeouts().ImplicitWait = TimeSpan.FromMilliseconds(500);
-            try // checks if a button can be clicked, if not - stops the work
+            // Initialize the Selenium WebDriver using ChromeDriver
+            IWebDriver seleniumDriver = new ChromeDriver();
+
+            // Variables to track site accessibility and button clickability
+            bool isSiteAccessible = false;
+            bool isButtonClickable = false;
+            int screenshotCount = 0;
+
+            try
             {
-                var Button = SeleniumDriver.FindElement(By.ClassName("button"));
-                Button.Click();
-                ScreenshotCount++;
-                AssertButtonClick = true;
-            } 
-            catch (OpenQA.Selenium.NoSuchElementException ex)
-            {
-                Console.WriteLine("The Button Could Not Be Clicked");
-                ScreenshotCount = 11;
+                // Navigate to the specified URL to check site accessibility
+                seleniumDriver.Navigate().GoToUrl("https://the-internet.herokuapp.com/challenging_dom");
+                isSiteAccessible = true;
             }
-            Screenshot SaveSc = ((ITakesScreenshot)SeleniumDriver).GetScreenshot();
-            if (ScreenshotCount == 11)
+            catch (OpenQA.Selenium.WebDriverException ex)
             {
-                SeleniumDriver.Quit();
+                // Log an error if the site cannot be reached
+                Console.WriteLine("The site couldn't be reached: " + ex.Message);
+                screenshotCount = 11; // Exceeds the maximum limit to exit the loop
             }
-            else
+
+            // Assert that the site is accessible
+            ClassicAssert.IsTrue(isSiteAccessible);
+
+            // Retrieve and display the site title for verification purposes
+            var siteTitle = seleniumDriver.Title;
+            Console.WriteLine("Site Title: " + siteTitle);
+
+            // Take screenshots while ensuring button clickability
+            while (screenshotCount < 10)
             {
-                SaveSc.SaveAsFile("C:\\Users\\olga-\\Downloads\\Screenshot" + ScreenshotCount + ".png");
+                // Set an implicit wait time for finding elements
+                seleniumDriver.Manage().Timeouts().ImplicitWait = TimeSpan.FromMilliseconds(500);
+
+                try
+                {
+                    // Attempt to locate and click the button on the webpage
+                    var button = seleniumDriver.FindElement(By.ClassName("button"));
+                    button.Click();
+                    screenshotCount++;
+                    isButtonClickable = true;
+                }
+                catch (OpenQA.Selenium.NoSuchElementException ex)
+                {
+                    // Log an error if the button cannot be clicked
+                    Console.WriteLine("The button could not be clicked: " + ex.Message);
+                    screenshotCount = 11; // Exceeds the maximum limit to exit the loop
+                }
+
+                // Capture and save a screenshot of the current state
+                Screenshot screenshot = ((ITakesScreenshot)seleniumDriver).GetScreenshot();
+
+                if (screenshotCount == 11)
+                {
+                    // Exit the loop and close the driver if an issue occurs
+                    seleniumDriver.Quit();
+                }
+                else
+                {
+                    string screenshotPath = $"C:\\Users\\olga-\\Downloads\\Screenshot{screenshotCount}.png";
+                    screenshot.SaveAsFile(screenshotPath);
+                    Console.WriteLine($"Screenshot saved at: {screenshotPath}");
+                }
+
+                // Assert that the button was successfully clicked
+                ClassicAssert.IsTrue(isButtonClickable);
             }
-            ClassicAssert.IsTrue(AssertButtonClick); // final assert
+
+            // Quit the Selenium WebDriver after execution
+            seleniumDriver.Quit();
         }
-        SeleniumDriver.Quit();
     }
 }
